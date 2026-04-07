@@ -697,8 +697,8 @@
       let fireworksParticles = [];
       let photoBookFlip = null;
 
-      const BLOW_THRESHOLD = 0.08;
-      const BLOW_FRAMES = 6;
+      const BLOW_THRESHOLD = 0.16;
+      const BLOW_FRAMES = 8;
 
       renderCakeCards();
       buildBalloons();
@@ -721,7 +721,7 @@
       });
 
       blowBtn.addEventListener("click", async () => {
-        if (state.candles.length === 0) {
+        if (state.candles === 0) {
           blowStatus.textContent = "Click the cake first to add candles.";
           return;
         }
@@ -916,14 +916,9 @@
 
         bookScene.classList.add("show");
         bookScene.setAttribute("aria-hidden", "false");
-        try {
-          await initializePhotoAlbum();
-          startBookMusic();
-          autoOpenAlbum();
-        } catch (error) {
-          console.error("Album initialization failed:", error);
-          blowStatus.textContent = "Album loading failed. Refresh the page to try again.";
-        }
+        await initializePhotoAlbum();
+        startBookMusic();
+        autoOpenAlbum();
       }
 
       async function initializePhotoAlbum() {
@@ -935,10 +930,7 @@
           photoBookFlip = null;
         }
 
-        if (!window.PageFlip) {
-          throw new Error("PageFlip library failed to load");
-        }
-        photoBookFlip = new PageFlip(photoBook, {
+        photoBookFlip = new St.PageFlip(photoBook, {
           width: 430,
           height: 560,
           minWidth: 270,
