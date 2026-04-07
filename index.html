@@ -697,8 +697,8 @@
       let fireworksParticles = [];
       let photoBookFlip = null;
 
-      const BLOW_THRESHOLD = 0.16;
-      const BLOW_FRAMES = 8;
+      const BLOW_THRESHOLD = 0.08;
+      const BLOW_FRAMES = 6;
 
       renderCakeCards();
       buildBalloons();
@@ -721,7 +721,7 @@
       });
 
       blowBtn.addEventListener("click", async () => {
-        if (state.candles === 0) {
+        if (state.candles.length === 0) {
           blowStatus.textContent = "Click the cake first to add candles.";
           return;
         }
