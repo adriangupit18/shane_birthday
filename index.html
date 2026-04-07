@@ -698,8 +698,9 @@
       let photoBookFlip = null;
       let discoveredPhotoUrls = null;
 
-      const BLOW_THRESHOLD = 0.08;
-      const BLOW_FRAMES = 5;
+      const BLOW_THRESHOLD = 0.055;
+      const BLOW_PEAK_THRESHOLD = 0.24;
+      const BLOW_FRAMES = 2;
 
       renderCakeCards();
       buildBalloons();
@@ -859,7 +860,7 @@
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 512;
-        analyser.smoothingTimeConstant = 0.58;
+        analyser.smoothingTimeConstant = 0.35;
 
         sourceNode = audioContext.createMediaStreamSource(mediaStream);
         sourceNode.connect(analyser);
@@ -871,16 +872,21 @@
           analyser.getByteTimeDomainData(data);
 
           let sum = 0;
+          let peak = 0;
           for (let i = 0; i < data.length; i += 1) {
             const sample = (data[i] - 128) / 128;
             sum += sample * sample;
+            const absSample = Math.abs(sample);
+            if (absSample > peak) {
+              peak = absSample;
+            }
           }
           const rms = Math.sqrt(sum / data.length);
 
-          if (rms > BLOW_THRESHOLD) {
+          if (rms > BLOW_THRESHOLD || peak > BLOW_PEAK_THRESHOLD) {
             over += 1;
           } else {
-            over = Math.max(0, over - 1);
+            over = 0;
           }
 
           if (over >= BLOW_FRAMES) {
