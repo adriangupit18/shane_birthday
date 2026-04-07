@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Birthday Cake App</title>
+    <style>
+      :root {
+        --pink: #ff4d6d;
+        --pink-soft: #ff8fab;
+        --ink: #2b2036;
+        --light-bg: linear-gradient(180deg, #fff8fb 0%, #ffeef4 55%, #ffe5ed 100%);
+        --dark-bg:
+          radial-gradient(circle at center, rgba(255, 255, 255, 0.03) 0%, rgba(0, 0, 0, 0.85) 62%),
+          linear-gradient(180deg, #05050a 0%, #0b0f2b 42%, #020208 100%);
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font-family: Arial, sans-serif;
+        background: var(--light-bg);
+        color: var(--ink);
+        transition: background 420ms ease, color 420ms ease;
+        padding: 16px;
+      }
+
+      body.dark {
+        background: var(--dark-bg);
+        color: #f1edf7;
+      }
+
+      body.book-open {
+        background:
+          radial-gradient(circle at 30% 22%, rgba(255, 210, 184, 0.12) 0%, rgba(255, 210, 184, 0) 36%),
+          radial-gradient(circle at 74% 78%, rgba(255, 150, 170, 0.14) 0%, rgba(255, 150, 170, 0) 34%),
+          linear-gradient(180deg, #120f16 0%, #0d0a12 56%, #08060d 100%);
+        color: #f3e8df;
+      }
+
+      .app {
+        width: min(920px, 96vw);
+        transition: opacity 600ms ease, transform 600ms ease;
+      }
+
+      .app.fade-out {
+        opacity: 0;
+        transform: translateY(-14px) scale(0.98);
+        pointer-events: none;
+      }
+
+      .pages {
+        display: grid;
+        min-height: min(760px, 92vh);
+      }
+
+      .screen {
+        grid-area: 1 / 1;
+        opacity: 0;
+        transform: translateY(22px) scale(0.98);
+        pointer-events: none;
+        transition: opacity 420ms ease, transform 420ms ease;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+      }
+
+      .screen.active {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+      }
+
+      .title {
+        margin: 0;
+        text-align: center;
+        font-size: clamp(28px, 5vw, 42px);
+        font-weight: 800;
+      }
+
+      .subtitle {
+        margin: 10px auto 18px;
+        text-align: center;
+        font-size: clamp(15px, 2.2vw, 20px);
+      }
+
+      .panel {
+        width: min(640px, 92vw);
+        background: rgba(255, 255, 255, 0.78);
+        border: 2px solid rgba(255, 77, 109, 0.34);
+        border-radius: 24px;
+        box-shadow: 0 16px 38px rgba(69, 26, 49, 0.12);
+        backdrop-filter: blur(4px);
+        padding: 20px;
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+      }
+
+      body.dark .panel {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 143, 171, 0.35);
+        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.35);
+      }
+
+      .name-input {
+        width: min(360px, 78vw);
+        padding: 11px 14px;
+        border: 2px solid var(--pink);
+        border-radius: 14px;
+        background: #fff3f7;
+        color: #2f1f2a;
+        font-size: 18px;
+        font-weight: 700;
+        text-align: center;
+        outline: none;
+      }
+
+      .name-input:focus {
+        box-shadow: 0 0 0 5px rgba(255, 77, 109, 0.2);
+      }
+
+      .btn {
+        border: none;
+        border-radius: 30px;
+        background: linear-gradient(135deg, var(--pink), var(--pink-soft));
+        box-shadow: 0 6px 0 #d63a55;
+        color: #fff;
+        font-size: 18px;
+        font-weight: 700;
+        padding: 11px 18px;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .btn:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #d63a55;
+      }
+
+      .status {
+        min-height: 22px;
+        margin: 0;
+        font-weight: 700;
+        color: #ff4d6d;
+        text-align: center;
+      }
+
+      body.dark .status {
+        color: #ffd4df;
+      }
+
+      .cake-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+        gap: 14px;
+        width: min(680px, 92vw);
+      }
+
+      .cake-card {
+        background: rgba(255, 255, 255, 0.88);
+        border: 2px solid transparent;
+        border-radius: 18px;
+        padding: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 240ms ease, border-color 240ms ease, box-shadow 240ms ease;
+      }
+
+      .cake-card:hover {
+        transform: translateY(-6px) scale(1.02);
+        border-color: #ff4d6d;
+        box-shadow: 0 12px 24px rgba(255, 77, 109, 0.24);
+      }
+
+      .cake-card img {
+        width: 92px;
+        height: 92px;
+        object-fit: cover;
+        border-radius: 12px;
+        display: block;
+        margin: 0 auto 8px;
+      }
+
+      .cake-card span {
+        font-weight: 700;
+        color: #382235;
+      }
+
+      .counter {
+        margin: 0 auto 14px;
+        width: min(280px, 72vw);
+        text-align: center;
+        border: 2px solid #ff4d6d;
+        background: #ffe6ec;
+        color: #2b1a29;
+        border-radius: 14px;
+        padding: 7px 12px;
+        font-size: clamp(20px, 4.2vw, 30px);
+        font-weight: 800;
+      }
+
+      .cake-wrap {
+        width: min(440px, 90vw);
+        position: relative;
+        cursor: pointer;
+        margin: 8px auto 0;
+      }
+
+      .cake-wrap img {
+        width: 100%;
+        display: block;
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+
+      .candles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .candle {
+        position: absolute;
+        width: 12px;
+        height: 46px;
+        margin-left: -6px;
+        border-radius: 4px;
+        background: repeating-linear-gradient(45deg, #ffffff, #ffffff 4px, #ff7aa2 4px, #ff7aa2 8px);
+        transform-origin: bottom center;
+        animation: candleIn 260ms ease both;
+      }
+
+      .flame {
+        position: absolute;
+        left: 50%;
+        top: -22px;
+        width: 12px;
+        height: 22px;
+        transform: translateX(-50%);
+        transition: opacity 420ms ease, transform 420ms ease;
+      }
+
+      .flame::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 30%, #fff6a0 0%, #ffb300 35%, #ff7a00 65%, rgba(255, 122, 0, 0) 75%);
+        border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+        animation: flameMove 0.24s infinite ease-in-out;
+        box-shadow: 0 0 20px 8px rgba(255, 160, 0, 0.8);
+      }
+
+      .flame::after {
+        content: "";
+        position: absolute;
+        width: 6px;
+        height: 10px;
+        left: 50%;
+        top: 4px;
+        transform: translateX(-50%);
+        background: radial-gradient(circle, #ffffff 0%, #ffe066 60%, transparent 70%);
+        border-radius: 50%;
+      }
+
+      .flame.out {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-16px) scale(0.25);
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 320ms ease;
+        z-index: 999;
+      }
+
+      .overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .book-scene {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 680ms ease;
+        z-index: 1100;
+        background:
+          radial-gradient(circle at center, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.84) 68%),
+          linear-gradient(180deg, #17121f 0%, #0d0b13 100%);
+      }
+
+      .book-scene.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .album-wrap {
+        width: min(1040px, 94vw);
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+        padding: 14px 8px;
+      }
+
+      .album-title {
+        margin: 0;
+        font-size: clamp(24px, 4.8vw, 40px);
+        color: #ffe8d3;
+        letter-spacing: 0.03em;
+        text-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+      }
+
+      .album-hint {
+        margin: 0;
+        color: rgba(255, 237, 225, 0.86);
+        text-align: center;
+        font-size: clamp(13px, 2.3vw, 16px);
+      }
+
+      #photoBook {
+        width: min(960px, 92vw);
+        height: min(72vh, 700px);
+        filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.5));
+      }
+
+      .book-page {
+        background:
+          linear-gradient(160deg, rgba(255, 255, 255, 0.95) 0%, rgba(247, 239, 227, 0.95) 100%),
+          repeating-linear-gradient(0deg, rgba(120, 94, 66, 0.05), rgba(120, 94, 66, 0.05) 1px, transparent 1px, transparent 6px);
+        border: 1px solid rgba(113, 82, 51, 0.22);
+      }
+
+      .book-page.cover {
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        text-align: center;
+        position: relative;
+        background:
+          linear-gradient(145deg, #6d4b3a 0%, #4f3428 55%, #3d271d 100%),
+          radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 52%);
+        color: #ffe2bf;
+        border: 1px solid rgba(255, 224, 188, 0.28);
+      }
+
+      .cover h3 {
+        margin: 0;
+        font-size: clamp(24px, 4.6vw, 42px);
+      }
+
+      .cover p {
+        margin: 8px 0 0;
+        color: rgba(255, 232, 210, 0.9);
+      }
+
+      .cover-from {
+        position: absolute;
+        right: clamp(12px, 2.8vw, 24px);
+        bottom: clamp(10px, 2.6vw, 18px);
+        font-size: clamp(12px, 2.2vw, 16px);
+        color: rgba(255, 232, 210, 0.95);
+        letter-spacing: 0.02em;
+      }
+
+      .photo-page {
+        width: 100%;
+        height: 100%;
+        padding: clamp(12px, 2.4vw, 20px);
+        display: grid;
+        place-items: center;
+      }
+
+      .photo-frame {
+        width: 100%;
+        height: 100%;
+        border-radius: 8px;
+        padding: clamp(8px, 1.8vw, 12px);
+        background: #fefbf6;
+        border: 1px solid rgba(148, 116, 86, 0.22);
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+          0 8px 18px rgba(77, 52, 30, 0.18);
+      }
+
+      .photo-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 5px;
+        display: block;
+      }
+
+      .album-empty {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        color: #5f4a3a;
+        font-weight: 700;
+        padding: 14px;
+      }
+
+      #countdownOverlay {
+        background: rgba(2, 2, 8, 0.78);
+      }
+
+      #countNumber {
+        margin: 0;
+        color: #ffffff;
+        font-size: clamp(84px, 20vw, 160px);
+        font-weight: 800;
+        text-shadow: 0 0 30px rgba(255, 77, 109, 0.8);
+      }
+
+      #birthdayOverlay {
+        background:
+          radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.82) 65%),
+          linear-gradient(180deg, #120418 0%, #070512 100%);
+      }
+
+      .birthday-card {
+        width: min(580px, 90vw);
+        text-align: center;
+        border: 2px solid rgba(255, 143, 171, 0.5);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+        padding: 22px 18px;
+        backdrop-filter: blur(6px);
+        position: relative;
+        z-index: 3;
+      }
+
+      .birthday-title {
+        margin: 0;
+        color: #ff8fab;
+        font-size: clamp(34px, 8vw, 62px);
+        font-weight: 800;
+      }
+
+      .birthday-name {
+        margin: 8px 0 0;
+        color: #ffffff;
+        font-size: clamp(34px, 7.5vw, 58px);
+        font-weight: 700;
+      }
+
+      .fireworks-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .balloons {
+        position: absolute;
+        inset: 0;                                                                                                                                                                                               
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 2;
+      }
+
+      .balloon {
+        position: absolute;
+        width: 34px;
+        height: 44px;
+        border-radius: 52% 48% 52% 48%;
+        opacity: 0.85;
+        animation: balloonRise linear infinite;
+      }
+
+      .balloon::after {
+        content: "";
+        position: absolute;
+        width: 1px;
+        height: 42px;
+        left: 50%;
+        top: 40px;
+        background: rgba(255, 255, 255, 0.7);
+        transform: translateX(-50%);
+      }
+
+      @keyframes balloonRise {
+        0% {
+          transform: translateY(120%) translateX(0);
+        }
+        50% {
+          transform: translateY(50%) translateX(8px);
+        }
+        100% {
+          transform: translateY(-140%) translateX(-8px);
+        }
+      }
+
+      @keyframes candleIn {
+        from {
+          transform: translateX(-50%) scale(0.62);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(-50%) scale(1);
+          opacity: 1;
+        }
+      }
+
+      @keyframes flameMove {
+        0% {
+          transform: scale(1) rotate(-2deg);
+          opacity: 0.9;
+        }
+        50% {
+          transform: scale(1.08) rotate(2deg);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(0.95) rotate(-1deg);
+          opacity: 0.86;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .pages {
+          min-height: 94vh;
+        }
+
+        .cake-grid {
+          grid-template-columns: repeat(2, minmax(130px, 1fr));
+        }
+
+        .cake-card img {
+          width: 80px;
+          height: 80px;
+        }
+
+        .candle {
+          width: 10px;
+          height: 40px;
+          margin-left: -5px;
+        }
+
+        .flame {
+          width: 10px;
+          height: 18px;
+          top: -19px;
+        }
+
+        #photoBook {
+          height: min(66vh, 560px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <div class="pages">
+        <section class="screen active" id="page1" aria-label="Enter name page">
+          <h1 class="title">Enter your name</h1>
+          <div class="panel">
+            <input id="nameInput" class="name-input" type="text" maxlength="40" placeholder="Your name" />
+            <p class="status" id="nameStatus" aria-live="polite"></p>
+            <button class="btn" id="nextBtn" type="button">Next 🎂</button>
+          </div>
+        </section>
+
+        <section class="screen" id="page2" aria-label="Choose cake page">
+          <h2 class="title">Choose your cake 🎂</h2>
+          <p class="subtitle" id="helloText"></p>
+          <div class="cake-grid" id="cakeGrid"></div>
+        </section>
+
+        <section class="screen" id="page3" aria-label="Candle page">
+          <h2 class="title">Show your age by placing candles on the cake</h2>
+          <p class="counter" id="countDisplay">0</p>
+          <div class="cake-wrap" id="cakeWrap">
+            <img id="selectedCake" src="assets/cakes/ube.png" alt="Selected cake" />
+            <div class="candles" id="candleLayer"></div>
+          </div>
+          <button class="btn" id="blowBtn" type="button">Blow now!</button>
+          <p class="status" id="blowStatus" aria-live="polite"></p>
+        </section>
+      </div>
+    </main>
+
+    <div class="overlay" id="countdownOverlay" aria-hidden="true">
+      <p id="countNumber">3</p>
+    </div>
+
+    <div class="overlay" id="birthdayOverlay" aria-hidden="true">
+      <canvas id="fireworksCanvas" class="fireworks-canvas"></canvas>
+      <div id="balloons" class="balloons" aria-hidden="true"></div>
+      <div class="birthday-card">
+        <p class="birthday-title">Happy Birthday!</p>
+        <p class="birthday-name" id="birthdayName"></p>
+      </div>
+    </div>
+
+    <section class="book-scene" id="bookScene" aria-label="Photo album scene" aria-hidden="true">
+      <div class="album-wrap">
+        <h2 class="album-title">Birthday Memories</h2>
+        <p class="album-hint">Swipe or click page corners to flip.</p>
+        <div id="photoBook" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <audio id="birthdayMusic" src="videoplayback.mp3" preload="auto"></audio>
+
+    <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.min.js"></script>
+    <script>
+      const cakeOptions = [
+        {
+          id: "strawberry",
+          label: "Strawberry",
+          imageCandidates: ["assets/cakes/strawberry.png", "./assets/cakes/strawberry.png", "cake1.png", "./cake1.png"],
+        },
+        {
+          id: "chocolate",
+          label: "Chocolate",
+          imageCandidates: ["assets/cakes/chocolate.png", "./assets/cakes/chocolate.png", "cake2.png", "./cake2.png"],
+        },
+        {
+          id: "caramel",
+          label: "Caramel",
+          imageCandidates: ["assets/cakes/caramel.png", "./assets/cakes/caramel.png", "cake3.png", "./cake3.png"],
+        },
+        {
+          id: "mango",
+          label: "Mango",
+          imageCandidates: ["assets/cakes/mango.png", "./assets/cakes/mango.png", "cake4.png", "./cake4.png"],
+        },
+        {
+          id: "ube",
+          label: "Ube",
+          imageCandidates: ["assets/cakes/ube.png", "./assets/cakes/ube.png", "cake5.png", "./cake5.png"],
+        },
+      ];
+
+      const state = {
+        name: "",
+        selectedCake: cakeOptions[0],
+        candles: [],
+        blownOut: false,
+      };
+
+      const page1 = document.getElementById("page1");
+      const page2 = document.getElementById("page2");
+      const page3 = document.getElementById("page3");
+      const nameInput = document.getElementById("nameInput");
+      const nameStatus = document.getElementById("nameStatus");
+      const nextBtn = document.getElementById("nextBtn");
+      const helloText = document.getElementById("helloText");
+      const cakeGrid = document.getElementById("cakeGrid");
+      const selectedCake = document.getElementById("selectedCake");
+      const cakeWrap = document.getElementById("cakeWrap");
+      const candleLayer = document.getElementById("candleLayer");
+      const countDisplay = document.getElementById("countDisplay");
+      const blowBtn = document.getElementById("blowBtn");
+      const blowStatus = document.getElementById("blowStatus");
+      const countdownOverlay = document.getElementById("countdownOverlay");
+      const countNumber = document.getElementById("countNumber");
+      const birthdayOverlay = document.getElementById("birthdayOverlay");
+      const birthdayName = document.getElementById("birthdayName");
+      const birthdayMusic = document.getElementById("birthdayMusic");
+      const fireworksCanvas = document.getElementById("fireworksCanvas");
+      const balloons = document.getElementById("balloons");
+      const fireworksCtx = fireworksCanvas.getContext("2d");
+      const appRoot = document.querySelector(".app");
+      const bookScene = document.getElementById("bookScene");
+      const photoBook = document.getElementById("photoBook");
+
+      let audioContext = null;
+      let analyser = null;
+      let mediaStream = null;
+      let sourceNode = null;
+      let frameId = null;
+      let celebrationRunning = false;
+      let fireworksRaf = null;
+      let fireworksSpawner = null;
+      let fireworksParticles = [];
+      let photoBookFlip = null;
+
+      const BLOW_THRESHOLD = 0.16;
+      const BLOW_FRAMES = 8;
+
+      renderCakeCards();
+      buildBalloons();
+
+      nextBtn.addEventListener("click", goToCakeSelection);
+      nameInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          goToCakeSelection();
+        }
+      });
+
+      cakeWrap.addEventListener("click", (event) => {
+        const pos = getClickPosition(event);
+        state.candles.push(pos);
+        state.blownOut = false;
+        countDisplay.textContent = String(state.candles.length);
+        blowStatus.textContent = "";
+        resetCelebrationOverlay();
+        renderCandles();
+      });
+
+      blowBtn.addEventListener("click", async () => {
+        if (state.candles === 0) {
+          blowStatus.textContent = "Click the cake first to add candles.";
+          return;
+        }
+        if (state.blownOut) {
+          blowStatus.textContent = "Flames are already out. Add more candles to relight.";
+          return;
+        }
+
+        blowStatus.textContent = "Microphone is on. Blow toward your microphone.";
+        try {
+          await startMicMonitor();
+        } catch (error) {
+          blowStatus.textContent = "Microphone permission denied or unavailable.";
+        }
+      });
+
+      function showScreen(screen) {
+        [page1, page2, page3].forEach((node) => node.classList.remove("active"));
+        screen.classList.add("active");
+
+        if (screen === page3) {
+          document.body.classList.add("dark");
+        } else {
+          document.body.classList.remove("dark");
+        }
+      }
+
+      function goToCakeSelection() {
+        const userName = nameInput.value.trim();
+        if (!userName) {
+          nameStatus.textContent = "Please enter your name.";
+          nameInput.focus();
+          return;
+        }
+        state.name = userName;
+        nameStatus.textContent = "";
+        helloText.textContent = `Hi ${state.name}, choose your favorite cake!`;
+        showScreen(page2);
+      }
+
+      function renderCakeCards() {
+        const fragment = document.createDocumentFragment();
+
+        cakeOptions.forEach((cake) => {
+          const card = document.createElement("article");
+          card.className = "cake-card";
+          card.innerHTML = `<img alt="${cake.label} cake" /><span>${cake.label}</span>`;
+          const img = card.querySelector("img");
+          applyImageWithFallback(img, cake.imageCandidates);
+          card.addEventListener("click", () => {
+            state.selectedCake = cake;
+            enterCandlePage();
+          });
+          fragment.appendChild(card);
+        });
+
+        cakeGrid.appendChild(fragment);
+      }
+
+      function enterCandlePage() {
+        stopMicMonitor();
+        state.candles = [];
+        state.blownOut = false;
+        countDisplay.textContent = "0";
+        blowStatus.textContent = "";
+        resetCelebrationOverlay();
+        applyImageWithFallback(selectedCake, state.selectedCake.imageCandidates);
+        selectedCake.alt = `${state.selectedCake.label} cake selected by ${state.name}`;
+        candleLayer.innerHTML = "";
+        showScreen(page3);
+      }
+
+      function applyImageWithFallback(imageNode, candidates) {
+        if (!imageNode || !Array.isArray(candidates) || candidates.length === 0) {
+          return;
+        }
+
+        let index = 0;
+        imageNode.src = candidates[index];
+        imageNode.onerror = () => {
+          index += 1;
+          if (index < candidates.length) {
+            imageNode.src = candidates[index];
+          } else {
+            imageNode.onerror = null;
+          }
+        };
+      }
+
+      function renderCandles() {
+        candleLayer.innerHTML = "";
+        const total = state.candles.length;
+        if (total <= 0) {
+          return;
+        }
+
+        state.candles.forEach((pos, index) => {
+          const candle = document.createElement("div");
+          candle.className = "candle";
+
+          const flame = document.createElement("div");
+          flame.className = "flame";
+          if (state.blownOut) {
+            flame.classList.add("out");
+          }
+          candle.appendChild(flame);
+
+          candle.style.left = `${pos.x}%`;
+          candle.style.bottom = `${pos.y}%`;
+          candle.style.transform = `translateX(-50%) rotate(${((index % 5) - 2) * 1.4}deg)`;
+
+          candleLayer.appendChild(candle);
+        });
+      }
+
+      function getClickPosition(event) {
+        const rect = selectedCake.getBoundingClientRect();
+        const relativeX = ((event.clientX - rect.left) / rect.width) * 100;
+        const relativeYFromBottom = ((rect.bottom - event.clientY) / rect.height) * 100;
+
+        const x = clamp(relativeX, 3, 97);
+        const y = clamp(relativeYFromBottom, 2, 98);
+        return { x, y };
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      async function startMicMonitor() {
+        stopMicMonitor();
+
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 1024;
+        analyser.smoothingTimeConstant = 0.78;
+
+        sourceNode = audioContext.createMediaStreamSource(mediaStream);
+        sourceNode.connect(analyser);
+
+        const data = new Uint8Array(analyser.fftSize);
+        let over = 0;
+
+        const tick = () => {
+          analyser.getByteTimeDomainData(data);
+
+          let sum = 0;
+          for (let i = 0; i < data.length; i += 1) {
+            const sample = (data[i] - 128) / 128;
+            sum += sample * sample;
+          }
+          const rms = Math.sqrt(sum / data.length);
+
+          if (rms > BLOW_THRESHOLD) {
+            over += 1;
+          } else {
+            over = Math.max(0, over - 1);
+          }
+
+          if (over >= BLOW_FRAMES) {
+            extinguishFlames();
+            return;
+          }
+
+          frameId = requestAnimationFrame(tick);
+        };
+
+        frameId = requestAnimationFrame(tick);
+      }
+
+      function extinguishFlames() {
+        document.querySelectorAll(".flame").forEach((flame) => flame.classList.add("out"));
+        state.blownOut = true;
+        blowStatus.textContent = "Great blow! All flames are out.";
+        stopMicMonitor();
+        startPhotoAlbumSequence();
+      }
+
+      async function startPhotoAlbumSequence() {
+        if (bookScene.classList.contains("show")) {
+          return;
+        }
+
+        blowStatus.textContent = "Beautiful. Opening your photo album...";
+        await wait(500);
+
+        appRoot.classList.add("fade-out");
+        document.body.classList.remove("dark");
+        document.body.classList.add("book-open");
+        await wait(620);
+
+        bookScene.classList.add("show");
+        bookScene.setAttribute("aria-hidden", "false");
+        await initializePhotoAlbum();
+        startBookMusic();
+        autoOpenAlbum();
+      }
+
+      async function initializePhotoAlbum() {
+        const photoUrls = await discoverPhotoUrls();
+        buildAlbumPages(photoUrls);
+
+        if (photoBookFlip) {
+          photoBookFlip.destroy();
+          photoBookFlip = null;
+        }
+
+        photoBookFlip = new St.PageFlip(photoBook, {
+          width: 430,
+          height: 560,
+          minWidth: 270,
+          maxWidth: 980,
+          minHeight: 330,
+          maxHeight: 760,
+          size: "stretch",
+          maxShadowOpacity: 0.36,
+          showCover: true,
+          drawShadow: true,
+          autoSize: true,
+          mobileScrollSupport: false,
+          useMouseEvents: true,
+          swipeDistance: 26,
+        });
+
+        const pageNodes = photoBook.querySelectorAll(".book-page");
+        photoBookFlip.loadFromHTML(pageNodes);
+        photoBookFlip.on("flip", () => {
+          startBookMusic();
+        });
+      }
+
+      async function discoverPhotoUrls() {
+        const found = [];
+        const photosFolderSeries = await collectSeriesByPattern(["photos/pic", "./photos/pic", "/photos/pic"], 24);
+        const imagesFolderSeries = await collectKnownImageFiles();
+
+        photosFolderSeries.forEach((src) => {
+          if (!found.includes(src)) {
+            found.push(src);
+          }
+        });
+
+        imagesFolderSeries.forEach((src) => {
+          if (!found.includes(src)) {
+            found.push(src);
+          }
+        });
+
+        return found;
+      }
+
+      async function collectSeriesByPattern(basePaths, maxTries) {
+        const found = [];
+        const formats = ["jpg", "jpeg", "png", "webp"];
+
+        for (let i = 1; i <= maxTries; i += 1) {
+          let matchedUrl = "";
+          for (const basePath of basePaths) {
+            for (const ext of formats) {
+              const candidate = `${basePath}${i}.${ext}`;
+              if (await assetExists(candidate)) {
+                matchedUrl = candidate;
+                break;
+              }
+            }
+            if (matchedUrl) {
+              break;
+            }
+          }
+
+          if (matchedUrl) {
+            found.push(matchedUrl);
+          }
+        }
+
+        return found;
+      }
+
+      async function collectKnownImageFiles() {
+        const ordered = [];
+        const candidates = [
+          "images/shane.jpg",
+          "./images/shane.jpg",
+          "/images/shane.jpg",
+        ];
+
+        for (let i = 1; i <= 20; i += 1) {
+          candidates.push(`images/shane ${i}.jpg`);
+          candidates.push(`./images/shane ${i}.jpg`);
+          candidates.push(`/images/shane ${i}.jpg`);
+        }
+        for (let i = 1; i <= 20; i += 1) {
+          candidates.push(`images/Shane ${i}.jpg`);
+          candidates.push(`./images/Shane ${i}.jpg`);
+          candidates.push(`/images/Shane ${i}.jpg`);
+        }
+
+        for (const candidate of candidates) {
+          if (await assetExists(candidate)) {
+            ordered.push(candidate);
+          }
+        }
+
+        return ordered;
+      }
+
+      async function assetExists(url) {
+        return new Promise((resolve) => {
+          const probe = new Image();
+          probe.onload = () => resolve(true);
+          probe.onerror = () => resolve(false);
+          probe.src = encodeURI(url);
+        });
+      }
+
+      function buildAlbumPages(photoUrls) {
+        const safeName = state.name ? `${state.name}'s` : "Our";
+        const pages = [];
+
+        pages.push(`
+          <div class="book-page cover">
+            <h3>${safeName} Album</h3>
+            <p>Turn the page to relive the moments</p>
+          </div>
+        `);
+
+        if (photoUrls.length === 0) {
+          pages.push(`
+            <div class="book-page">
+              <div class="album-empty">No photos found yet.<br/>Add files like photos/pic1.jpg or images/shane 1.jpg</div>
+            </div>
+          `);
+        } else {
+          photoUrls.forEach((src, index) => {
+            pages.push(`
+              <div class="book-page">
+                <div class="photo-page">
+                  <figure class="photo-frame">
+                    <img src="${src}" alt="Memory photo ${index + 1}" loading="lazy" />
+                  </figure>
+                </div>
+              </div>
+            `);
+          });
+        }
+
+        pages.push(`
+          <div class="book-page cover">
+            <h3>Happy Birthday Shane</h3>
+            <p>Wishing you joy, love, and sweet memories.</p>
+            <span class="cover-from">From: Bryle</span>
+          </div>
+        `);
+
+        photoBook.innerHTML = pages.join("");
+      }
+
+      function autoOpenAlbum() {
+        if (!photoBookFlip) {
+          return;
+        }
+
+        setTimeout(() => {
+          photoBookFlip.flipNext("top");
+        }, 520);
+      }
+
+      async function startBookMusic() {
+        try {
+          birthdayMusic.loop = true;
+          birthdayMusic.volume = 0.56;
+          if (birthdayMusic.paused) {
+            await birthdayMusic.play();
+          }
+        } catch (error) {
+          // Ignore autoplay interruption and keep album usable without music.
+        }
+      }
+
+      async function startCelebrationSequence() {
+        if (celebrationRunning) {
+          return;
+        }
+        celebrationRunning = true;
+
+        countdownOverlay.classList.add("show");
+        for (let i = 3; i >= 1; i -= 1) {
+          countNumber.textContent = String(i);
+          await wait(1000);
+        }
+        countdownOverlay.classList.remove("show");
+
+        birthdayName.textContent = state.name ? state.name : "Birthday Star";
+        birthdayOverlay.classList.add("show");
+        startFireworks();
+
+        try {
+          birthdayMusic.currentTime = 0;
+          await birthdayMusic.play();
+        } catch (error) {
+          blowStatus.textContent = "Happy Birthday! (Music playback was blocked by browser settings.)";
+        }
+
+        celebrationRunning = false;
+      }
+
+      function wait(ms) {
+        return new Promise((resolve) => {
+          setTimeout(resolve, ms);
+        });
+      }
+
+      function resetCelebrationOverlay() {
+        countdownOverlay.classList.remove("show");
+        birthdayOverlay.classList.remove("show");
+        bookScene.classList.remove("show");
+        bookScene.setAttribute("aria-hidden", "true");
+        appRoot.classList.remove("fade-out");
+        document.body.classList.remove("book-open");
+        celebrationRunning = false;
+        birthdayMusic.pause();
+        birthdayMusic.currentTime = 0;
+        stopFireworks();
+
+        if (photoBookFlip) {
+          photoBookFlip.destroy();
+          photoBookFlip = null;
+        }
+        photoBook.innerHTML = "";
+      }
+
+      function buildBalloons() {
+        const colors = ["#ff6fa3", "#ffd166", "#6ee7ff", "#b88cff", "#8ef5b8", "#ff8f8f"];
+        const fragment = document.createDocumentFragment();
+        for (let i = 0; i < 14; i += 1) {
+          const balloon = document.createElement("span");
+          balloon.className = "balloon";
+          balloon.style.left = `${Math.random() * 100}%`;
+          balloon.style.animationDuration = `${8 + Math.random() * 7}s`;
+          balloon.style.animationDelay = `${-Math.random() * 7}s`;
+          balloon.style.background = colors[i % colors.length];
+          fragment.appendChild(balloon);
+        }
+        balloons.appendChild(fragment);
+      }
+
+      function startFireworks() {
+        resizeFireworksCanvas();
+        fireworksParticles = [];
+
+        if (fireworksSpawner) {
+          clearInterval(fireworksSpawner);
+        }
+
+        fireworksSpawner = setInterval(() => {
+          spawnBurst();
+        }, 420);
+
+        const render = () => {
+          fireworksCtx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+          fireworksParticles = fireworksParticles.filter((p) => p.life > 0);
+
+          fireworksParticles.forEach((p) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.015;
+            p.life -= 1;
+
+            fireworksCtx.globalAlpha = Math.max(0, p.life / p.maxLife);
+            fireworksCtx.fillStyle = p.color;
+            fireworksCtx.beginPath();
+            fireworksCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            fireworksCtx.fill();
+          });
+          fireworksCtx.globalAlpha = 1;
+
+          fireworksRaf = requestAnimationFrame(render);
+        };
+
+        if (fireworksRaf) {
+          cancelAnimationFrame(fireworksRaf);
+        }
+        fireworksRaf = requestAnimationFrame(render);
+      }
+
+      function spawnBurst() {
+        const centerX = 70 + Math.random() * (fireworksCanvas.width - 140);
+        const centerY = 60 + Math.random() * (fireworksCanvas.height * 0.45);
+        const colors = ["#ff6fa3", "#ffd166", "#7ed7ff", "#c9a0ff", "#9dffca"];
+
+        for (let i = 0; i < 32; i += 1) {
+          const angle = (Math.PI * 2 * i) / 32;
+          const speed = 1.8 + Math.random() * 2.5;
+          fireworksParticles.push({
+            x: centerX,
+            y: centerY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 44 + Math.floor(Math.random() * 18),
+            maxLife: 62,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            size: 1.4 + Math.random() * 1.8,
+          });
+        }
+      }
+
+      function stopFireworks() {
+        if (fireworksSpawner) {
+          clearInterval(fireworksSpawner);
+          fireworksSpawner = null;
+        }
+        if (fireworksRaf) {
+          cancelAnimationFrame(fireworksRaf);
+          fireworksRaf = null;
+        }
+        fireworksParticles = [];
+        fireworksCtx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+      }
+
+      function resizeFireworksCanvas() {
+        fireworksCanvas.width = window.innerWidth;
+        fireworksCanvas.height = window.innerHeight;
+      }
+
+      window.addEventListener("resize", resizeFireworksCanvas);
+
+      function stopMicMonitor() {
+        if (frameId) {
+          cancelAnimationFrame(frameId);
+          frameId = null;
+        }
+        if (sourceNode) {
+          sourceNode.disconnect();
+          sourceNode = null;
+        }
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+        }
+        if (audioContext) {
+          audioContext.close();
+          audioContext = null;
+        }
+        analyser = null;
+      }
+    </script>
+  </body>
+</html>
