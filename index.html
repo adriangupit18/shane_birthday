@@ -916,9 +916,14 @@
 
         bookScene.classList.add("show");
         bookScene.setAttribute("aria-hidden", "false");
-        await initializePhotoAlbum();
-        startBookMusic();
-        autoOpenAlbum();
+        try {
+          await initializePhotoAlbum();
+          startBookMusic();
+          autoOpenAlbum();
+        } catch (error) {
+          console.error("Album initialization failed:", error);
+          blowStatus.textContent = "Album loading failed. Refresh the page to try again.";
+        }
       }
 
       async function initializePhotoAlbum() {
@@ -930,7 +935,10 @@
           photoBookFlip = null;
         }
 
-        photoBookFlip = new St.PageFlip(photoBook, {
+        if (!window.PageFlip) {
+          throw new Error("PageFlip library failed to load");
+        }
+        photoBookFlip = new PageFlip(photoBook, {
           width: 430,
           height: 560,
           minWidth: 270,
