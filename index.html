@@ -698,9 +698,13 @@
       let photoBookFlip = null;
       let discoveredPhotoUrls = null;
 
-      const BLOW_THRESHOLD = 0.055;
-      const BLOW_PEAK_THRESHOLD = 0.24;
-      const BLOW_FRAMES = 2;
+      const MIC_WARMUP_MS = 650;
+      const MIC_CALIBRATION_MS = 1100;
+      const MIN_BLOW_MS = 220;
+      const MIN_RMS_THRESHOLD = 0.06;
+      const MIN_PEAK_THRESHOLD = 0.25;
+      const BLOW_NOISE_MULTIPLIER = 2.35;
+      const BLOW_PEAK_MARGIN = 0.09;
 
       renderCakeCards();
       buildBalloons();
@@ -866,7 +870,11 @@
         sourceNode.connect(analyser);
 
         const data = new Uint8Array(analyser.fftSize);
-        let over = 0;
+        const monitorStartTime = performance.now();
+        let baselineRmsTotal = 0;
+        let baselinePeakTotal = 0;
+        let baselineSamples = 0;
+        let blowStartTime = 0;
 
         const tick = () => {
           analyser.getByteTimeDomainData(data);
@@ -882,16 +890,43 @@
             }
           }
           const rms = Math.sqrt(sum / data.length);
+          const now = performance.now();
+          const elapsed = now - monitorStartTime;
 
-          if (rms > BLOW_THRESHOLD || peak > BLOW_PEAK_THRESHOLD) {
-            over += 1;
-          } else {
-            over = 0;
+          if (elapsed < MIC_WARMUP_MS) {
+            blowStatus.textContent = "Microphone is on. Getting ready...";
+            frameId = requestAnimationFrame(tick);
+            return;
           }
 
-          if (over >= BLOW_FRAMES) {
-            extinguishFlames();
+          if (elapsed < MIC_WARMUP_MS + MIC_CALIBRATION_MS) {
+            baselineRmsTotal += rms;
+            baselinePeakTotal += peak;
+            baselineSamples += 1;
+            blowStatus.textContent = "Listening... now blow toward your microphone.";
+            frameId = requestAnimationFrame(tick);
             return;
+          }
+
+          const noiseRms = baselineSamples > 0 ? baselineRmsTotal / baselineSamples : 0;
+          const noisePeak = baselineSamples > 0 ? baselinePeakTotal / baselineSamples : 0;
+
+          const requiredRms = Math.max(MIN_RMS_THRESHOLD, noiseRms * BLOW_NOISE_MULTIPLIER);
+          const requiredPeak = Math.max(MIN_PEAK_THRESHOLD, noisePeak + BLOW_PEAK_MARGIN);
+          const isBlow = rms > requiredRms && peak > requiredPeak;
+
+          blowStatus.textContent = "Mic is listening. Blow to put out the candles.";
+
+          if (isBlow) {
+            if (!blowStartTime) {
+              blowStartTime = now;
+            }
+            if (now - blowStartTime >= MIN_BLOW_MS) {
+              extinguishFlames();
+              return;
+            }
+          } else {
+            blowStartTime = 0;
           }
 
           frameId = requestAnimationFrame(tick);
@@ -1282,7 +1317,7 @@
         if (audioContext) {
           audioContext.close();
           audioContext = null;
-        }
+        }                                                                                                                                          
         analyser = null;
       }
     </script>
